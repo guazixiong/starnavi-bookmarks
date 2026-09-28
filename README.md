@@ -15,6 +15,7 @@
 - **搜索跳页**：第一页搜索框输入关键词回车，自动逐页翻到目标页并红色高亮
 - **DeepSeek 鲸鱼娘看板娘**：她会随机走动、爬行、横穿屏幕游泳（带气泡轨迹）；点击可文字聊天，说「我叫××」她会记住你的名字；可以用鼠标把她拎起来——狂甩会头晕、半空松手会掉下去弹两下；双击=撸鲸鱼，会冒爱心；开刊、跳页、读到封底都会主动说话
 - **拖拽排序 + 访问统计**：顺序与点击热度存本机 localStorage，封底显示总访问量与 Top3
+- **✎ 可视化书签管理**：点底部 ✎ 打开管理抽屉，添加 / 编辑 / 删除自定义书签，隐藏不想看的源条目（随时恢复），一键导出完整 `config.js` 到剪贴板永久固化——不改代码也能维护书签
 - **无障碍**：跟随 `prefers-reduced-motion`，动效自动降级
 
 ## 快速开始
@@ -45,9 +46,10 @@ starnavi-bookmarks/
 
 ## 数据存储
 
-书签排序、点击统计、音效开关、看板娘状态与昵称全部存于**本机浏览器** localStorage
-（键：`nav.extra` / `nav.order` / `nav.stats` / `nav.sound` / `nav.mascot` / `nav.petname`），**不上传任何数据**。
+书签管理抽屉的增删改、排序、点击统计、音效开关、看板娘状态与昵称全部存于**本机浏览器** localStorage
+（键：`nav.extra` / `nav.hidden` / `nav.order` / `nav.stats` / `nav.sound` / `nav.mascot` / `nav.petname`），**不上传任何数据**。
 
+- 本机改动（自定义 / 隐藏）点抽屉里的「↻ 应用并刷新书页」生效；想永久固化用「📋 导出 config.js」把合并后的配置粘贴回 `config.js`
 - 清空统计：控制台执行 `localStorage.removeItem('nav.stats')` 后刷新
 - 恢复默认顺序：`localStorage.removeItem('nav.order')`
 

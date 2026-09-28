@@ -157,6 +157,38 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
 #hud .pg{font-size:12px;letter-spacing:2px;color:rgba(244,239,228,.8);min-width:86px;text-align:center}
 #title{position:fixed;top:24px;left:0;right:0;text-align:center;z-index:5;font-family:"Playfair Display",serif;
   font-size:11px;letter-spacing:5px;text-transform:uppercase;color:rgba(201,164,92,.75);pointer-events:none}
+/* ── 书签管理抽屉 ─────────────────────── */
+#mgr{position:fixed;top:0;right:0;height:100vh;width:min(380px,92vw);z-index:70;transform:translateX(105%);
+  transition:.35s cubic-bezier(.2,.8,.2,1);background:rgba(12,14,22,.95);border-left:1px solid rgba(201,164,92,.4);
+  backdrop-filter:blur(14px);padding:22px 26px 40px;overflow-y:auto;color:var(--paper);font-size:13px}
+#mgr.open{transform:none}
+#mgr h3{font-family:"Playfair Display",serif;letter-spacing:2px;color:var(--gold);font-size:16px;margin-bottom:6px}
+#mgr h4{margin:20px 0 4px;font-family:"Playfair Display",serif;font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:rgba(201,164,92,.8)}
+#mgr .hint{color:rgba(244,239,228,.55);font-size:11.5px;line-height:1.7;margin-bottom:6px}
+#mgr label{display:block;font-size:11px;color:rgba(244,239,228,.6);margin:10px 0 4px;letter-spacing:1px}
+#mgr input,#mgr select{width:100%;padding:9px 11px;border-radius:8px;border:1px solid rgba(201,164,92,.35);
+  background:rgba(244,239,228,.06);color:var(--paper);font-size:13px;outline:none;font-family:inherit;box-sizing:border-box}
+#mgr input:focus,#mgr select:focus{border-color:var(--gold)}
+#mgr select option{color:#1c1a17}
+#mgr .row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+#mgr .row button{flex:1;min-width:130px}
+#mgr .pri{background:var(--gold);border:none;color:#14100a;padding:10px 14px;border-radius:8px;cursor:pointer;
+  font-family:inherit;font-size:13px;font-weight:600;letter-spacing:1px;transition:.2s}
+#mgr .pri:hover{filter:brightness(1.15)}
+#mgr .gh{background:none;border:1px solid rgba(201,164,92,.5);color:var(--gold);padding:9px 14px;border-radius:8px;
+  cursor:pointer;font-family:inherit;font-size:13px;transition:.2s}
+#mgr .gh:hover{background:rgba(201,164,92,.15)}
+#mgrClose{position:absolute;top:14px;right:14px;background:none;border:1px solid rgba(201,164,92,.4);border-radius:50%;
+  width:28px;height:28px;color:var(--gold);cursor:pointer;font-size:12px}
+#mgrClose:hover{background:rgba(201,164,92,.2)}
+#gTip{margin-top:12px;font-size:11.5px;color:#8fd9a8;min-height:17px;line-height:1.6}
+#mgr ul{list-style:none;margin:6px 0 0;padding:0}
+#mgr li{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:8px 0;border-bottom:1px dashed rgba(201,164,92,.22)}
+#mgr li b{font-weight:600;font-size:12.5px}
+#mgr li small{color:rgba(244,239,228,.45);font-size:10.5px}
+#mgr li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+#mgr li button{background:none;border:none;color:var(--gold);cursor:pointer;font-size:13px;padding:3px 7px;flex:none}
+#mgr li button:hover{filter:brightness(1.4)}
 @media (prefers-reduced-motion:reduce){.sheet,#book{transition-duration:.01ms!important}.sheet.fwd,.sheet.bwd,.gloss,#cast.on{animation-duration:.01ms!important}#mascot .pet{animation:none!important}}
 </style>
 </head>
@@ -169,7 +201,31 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
   <span class="pg" id="pgNo">封面</span>
   <button id="nextBtn" title="下一页（→）">▶</button>
   <button id="sndBtn" title="翻页音效开关">🔊</button>
+  <button id="mgrBtn" title="管理书签（增删改 · 导出配置）">✎</button>
 </div>
+
+<aside id="mgr">
+  <button id="mgrClose" title="关闭">✕</button>
+  <h3>编辑书签</h3>
+  <p class="hint">改动只存在你的浏览器（localStorage），不影响源文件；「导出」可复制完整 config.js 代码替换源文件，永久固化。</p>
+  <label>名称 *</label><input id="gName" placeholder="例如：Qoder" autocomplete="off">
+  <label>链接 *</label><input id="gUrl" placeholder="https://…" autocomplete="off">
+  <label>描述</label><input id="gDesc" placeholder="一句话介绍（可留空）" autocomplete="off">
+  <label>分组</label><select id="gGroup"></select>
+  <label>标签（逗号分隔）</label><input id="gTags" placeholder="工具, ai" autocomplete="off">
+  <div class="row">
+    <button class="pri" id="gAdd">✦ 添加</button>
+    <button class="gh" id="gCancel" style="display:none">取消编辑</button>
+  </div>
+  <div class="row">
+    <button class="pri" id="gApply">↻ 应用并刷新书页</button>
+    <button class="gh" id="gExport">📋 导出 config.js</button>
+  </div>
+  <div id="gTip"></div>
+  <h4>本机自定义条目</h4><ul id="gExtra"></ul>
+  <h4>源条目（🗑 = 本机隐藏）</h4><ul id="gSrc"></ul>
+  <h4>已隐藏的源条目</h4><ul id="gHid"></ul>
+</aside>
 
 <div id="mascot" title="DeepSeek 鲸鱼娘">
   <div id="mBubble"></div>
@@ -189,7 +245,9 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
   const CFG = window.NAV_CONFIG;
   const $ = s => document.querySelector(s);
   const readLS = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
-  const links = [...CFG.links, ...readLS("nav.extra", [])];
+  const extra = readLS("nav.extra", []);
+  let hidden = readLS("nav.hidden", []);
+  const links = [...CFG.links, ...extra].filter(l => !hidden.includes(l.url));
   const stats = readLS("nav.stats", {});
   const order = readLS("nav.order", []);
   const cats = CFG.categories;
@@ -262,7 +320,7 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
         <div class="frame"></div>
         <div class="est">Colophon</div>
         <h1 style="font-size:30px">本期完</h1>
-        <div class="issue">收录 ${links.length} 条目 · 总访问 ${totalV} 次<br>${top ? "最常翻阅：" + top : ""}<br><br>编辑请改 config.js · 数据存于本机浏览器</div>
+        <div class="issue">收录 ${links.length} 条目 · 总访问 ${totalV} 次<br>${top ? "最常翻阅：" + top : ""}<br><br>点底部 ✎ 可视化编辑 · 导出 config.js 永久固化<br>数据存于本机浏览器</div>
       </div>`;
   };
 
@@ -692,6 +750,79 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
     if (mode === "home" && !chatOpen && !dragPet && !pet.classList.contains("gone") && Math.random() < .35)
       speak(idleLines[Math.floor(Math.random() * idleLines.length)]);
   }, 30000);
+
+  // ── 书签管理抽屉：本机添加/编辑/删除自定义、隐藏源条目、导出完整 config.js ──
+  const mgr = $("#mgr"), mgrBtn = $("#mgrBtn"), gGroup = $("#gGroup");
+  cats.filter(c => c.id !== "all").forEach(c => gGroup.add(new Option(`${c.emoji} ${c.name}`, c.id)));
+  let editing = -1;
+  const gt = m => { $("#gTip").textContent = m; };
+  const clearForm = () => { ["gName", "gUrl", "gDesc", "gTags"].forEach(id => $("#" + id).value = "");
+    editing = -1; $("#gAdd").textContent = "✦ 添加"; $("#gCancel").style.display = "none"; };
+  const saveExtra = () => localStorage.setItem("nav.extra", JSON.stringify(extra));
+  function renderMgr() {
+    const ex = $("#gExtra"); ex.innerHTML = "";
+    if (!extra.length) ex.innerHTML = `<li><small>还没有自定义条目，用上方表单添加</small></li>`;
+    extra.forEach((l, i) => {
+      const li = document.createElement("li");
+      li.innerHTML = `<span><b>${l.name}</b><br><small>${groupName(l.group)} · ${host(l.url)}</small></span>`;
+      const be = document.createElement("button"); be.textContent = "✏️"; be.title = "编辑";
+      be.onclick = () => { editing = i; $("#gName").value = l.name; $("#gUrl").value = l.url;
+        $("#gDesc").value = l.desc || ""; $("#gTags").value = (l.tags || []).join(", ");
+        gGroup.value = l.group; $("#gAdd").textContent = "✦ 保存修改"; $("#gCancel").style.display = ""; };
+      const bd = document.createElement("button"); bd.textContent = "🗑"; bd.title = "删除";
+      bd.onclick = () => { extra.splice(i, 1); saveExtra(); if (editing === i) clearForm(); renderMgr(); gt("已删除 ✓ 点「应用并刷新书页」生效"); };
+      li.append(be, bd); ex.append(li);
+    });
+    const sr = $("#gSrc"); sr.innerHTML = "";
+    CFG.links.filter(l => !hidden.includes(l.url)).forEach(l => {
+      const li = document.createElement("li");
+      li.innerHTML = `<span><b>${l.name}</b><br><small>${groupName(l.group)} · ${host(l.url)}</small></span>`;
+      const bd = document.createElement("button"); bd.textContent = "🗑"; bd.title = "从书页隐藏（仅本机）";
+      bd.onclick = () => { hidden.push(l.url); localStorage.setItem("nav.hidden", JSON.stringify(hidden)); renderMgr(); gt(`已隐藏「${l.name}」✓ 刷新后生效，可在下方恢复`); };
+      li.append(bd); sr.append(li);
+    });
+    const hl = $("#gHid"); hl.innerHTML = "";
+    if (!hidden.length) hl.innerHTML = `<li><small>无</small></li>`;
+    hidden.forEach(u => {
+      const src = CFG.links.find(k => k.url === u);
+      const li = document.createElement("li");
+      li.innerHTML = `<span><b>${src ? src.name : u}</b><br><small>已从书页隐藏（仅本机）</small></span>`;
+      const br = document.createElement("button"); br.textContent = "↩"; br.title = "恢复显示";
+      br.onclick = () => { hidden = hidden.filter(x => x !== u); localStorage.setItem("nav.hidden", JSON.stringify(hidden)); renderMgr(); gt("已恢复 ✓ 点「应用并刷新书页」入书"); };
+      li.append(br); hl.append(li);
+    });
+  }
+  mgrBtn.onclick = () => { mgr.classList.add("open"); renderMgr();
+    if (!pet.classList.contains("gone")) speak("要往杂志里添条目吗？我帮你记着 ✍️"); };
+  $("#mgrClose").onclick = () => mgr.classList.remove("open");
+  addEventListener("keydown", e => { if (e.key === "Escape" && mgr.classList.contains("open")) mgr.classList.remove("open"); });
+  mgr.querySelectorAll("input,select").forEach(el => {
+    el.addEventListener("keydown", e => e.stopPropagation());
+  });
+  $("#gAdd").onclick = () => {
+    const n = $("#gName").value.trim(), u0 = $("#gUrl").value.trim();
+    if (!n || !u0) { gt("⚠️ 名称和链接为必填"); return; }
+    const url = /^https?:\/\//i.test(u0) ? u0 : "https://" + u0;
+    const item = { name: n, url, desc: $("#gDesc").value.trim(), group: gGroup.value, icon: "",
+      tags: $("#gTags").value.split(/[,，]/).map(s => s.trim()).filter(Boolean) };
+    const wasEdit = editing >= 0;
+    if (wasEdit) extra[editing] = item; else extra.push(item);
+    saveExtra(); clearForm(); renderMgr();
+    gt(wasEdit ? "已保存修改 ✓ 点「应用并刷新书页」生效" : "已添加 ✓ 点「应用并刷新书页」生效");
+  };
+  $("#gCancel").onclick = clearForm;
+  $("#gApply").onclick = () => location.reload();
+  $("#gExport").onclick = () => {
+    const out = JSON.parse(JSON.stringify(CFG));
+    out.links = [...CFG.links.filter(l => !hidden.includes(l.url)), ...JSON.parse(JSON.stringify(extra))];
+    const ord = readLS("nav.order", []);
+    if (ord.length) { const oi = u => { const i = ord.findIndex(o => o.u === u); return i === -1 ? Infinity : i; };
+      out.links.sort((a, b) => oi(a.url) - oi(b.url)); }
+    const code = "window.NAV_CONFIG = " + JSON.stringify(out, null, 2) + ";\n";
+    navigator.clipboard.writeText(code)
+      .then(() => gt("📋 完整配置已复制到剪贴板：粘贴替换 config.js 即永久固化"))
+      .catch(() => { gt("复制失败，配置已输出到浏览器控制台 (F12)"); console.log(code); });
+  };
 
   // ── 星空 ──
   const cv = $("#stars"), ctx = cv.getContext("2d");
