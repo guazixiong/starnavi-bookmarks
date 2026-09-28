@@ -100,6 +100,16 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
 #resLine{margin-top:14px;min-height:20px;font-size:13px;color:var(--dim)}
 #resLine b{color:var(--red)}
 .keys{margin-top:30px;font-family:"Playfair Display",serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)}
+/* ── 卷首目录（检索页内） ─────────────── */
+.toc-lead{width:82%;margin-top:26px;text-align:left}
+.toc-lead .tl-head{font-family:"Playfair Display",serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--gold);border-bottom:1px solid rgba(28,26,23,.2);padding-bottom:6px}
+.toc-lead .tl-row{display:flex;align-items:baseline;gap:8px;padding:7px 2px;cursor:pointer;border-bottom:1px dotted rgba(28,26,23,.22);transition:.18s}
+.toc-lead .tl-row:hover{color:var(--red);padding-left:8px}
+.toc-lead .tl-row .n{font-family:"Playfair Display","Noto Serif SC",serif;font-size:14px}
+.toc-lead .tl-row .d{flex:1;border-bottom:1px dotted rgba(28,26,23,.35);transform:translateY(-3px)}
+.toc-lead .tl-row .c{font-size:11px;color:var(--dim)}
+.toc-lead .tl-row .p{font-family:"Playfair Display",serif;font-size:13px;color:var(--red)}
 /* ── DeepSeek 鲸鱼娘：可移动 + 可聊天 ─────── */
 #mascot{position:fixed;left:0;top:0;z-index:60;width:140px;cursor:grab;user-select:none;-webkit-tap-highlight-color:transparent}
 #mascot.grabbing{cursor:grabbing}
@@ -260,7 +270,7 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
   const ordIdx = u => { const i = order.findIndex(o => o.u === u); return i === -1 ? Infinity : i; };
   links.sort((a, b) => (ordIdx(a.url) - ordIdx(b.url)) || 0);
 
-  // ── 组页：封面 → 搜索页 → 条目页(每页4条) → 目录页 → 封底 ──
+  // ── 组页：封面 → 检索页(含卷首目录) → 条目页(每页4条) → 详细目录页 → 封底 ──
   const PER = 4;
   const pages = [];
   pages.push({ type: "cover" });
@@ -288,13 +298,23 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
         <div class="brand">BOOKMARKS</div>
         <div class="open-hint">— 点击封面 · 翻开这一期 —</div>
       </div>`;
-    if (p.type === "search") return `<div class="page search-page">
+    if (p.type === "search") {
+      const firstOf = {};
+      links.forEach((l, idx) => { if (firstOf[l.group] === undefined) firstOf[l.group] = { page: Math.floor(idx / PER) + 2, n: 0 }; firstOf[l.group].n++; });
+      return `<div class="page search-page">
         <div class="mast">${CFG.site.name.replace("·", '<span class="dot">·</span>')}</div>
         <div class="sub">Search the index, turn to the page</div>
         <input id="q" placeholder="检索条目…" autocomplete="off">
         <div id="resLine">共收录 <b>${links.length}</b> 条</div>
+        <div class="toc-lead">
+          <div class="tl-head">Contents · 卷首目录</div>
+          ${Object.entries(firstOf).map(([g, x]) => `<div class="tl-row" data-jump="${x.page}">
+              <span class="n">${emojiOf(g)} ${groupName(g)}</span><span class="d"></span>
+              <span class="c">${x.n} 条</span><span class="p">P.${String(x.page).padStart(2, "0")}</span></div>`).join("")}
+        </div>
         <div class="keys">← → 翻页 · 点击书页边缘亦可翻页</div>
       </div>`;
+    }
     if (p.type === "list") return `<div class="page">
         <div class="page-head"><span>Index</span><b>P.${String(i).padStart(2, "0")}</b><span>${groupName(p.items[0].group)} 等</span></div>
         ${p.items.map(entryHTML).join("")}
