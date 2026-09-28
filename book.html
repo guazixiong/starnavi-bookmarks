@@ -270,13 +270,12 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
   const ordIdx = u => { const i = order.findIndex(o => o.u === u); return i === -1 ? Infinity : i; };
   links.sort((a, b) => (ordIdx(a.url) - ordIdx(b.url)) || 0);
 
-  // ── 组页：封面 → 检索页(含卷首目录) → 条目页(每页4条) → 详细目录页 → 封底 ──
+  // ── 组页：封面 → 检索页(含卷首目录) → 条目页(每页4条) → 封底 ──
   const PER = 4;
   const pages = [];
   pages.push({ type: "cover" });
   pages.push({ type: "search" });
   for (let i = 0; i < links.length; i += PER) pages.push({ type: "list", items: links.slice(i, i + PER), from: i });
-  pages.push({ type: "toc" });
   pages.push({ type: "back" });
   if (pages.length % 2) pages.splice(pages.length - 1, 0, { type: "blank" });
 
@@ -307,7 +306,7 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
         <input id="q" placeholder="检索条目…" autocomplete="off">
         <div id="resLine">共收录 <b>${links.length}</b> 条</div>
         <div class="toc-lead">
-          <div class="tl-head">Contents · 卷首目录</div>
+          <div class="tl-head">Contents · 目录</div>
           ${Object.entries(firstOf).map(([g, x]) => `<div class="tl-row" data-jump="${x.page}" data-group="${g}">
               <span class="n">${emojiOf(g)} ${groupName(g)}</span><span class="d"></span>
               <span class="c">${x.n} 条</span><span class="p">P.${String(x.page).padStart(2, "0")}</span></div>`).join("")}
@@ -320,18 +319,6 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
         ${p.items.map(entryHTML).join("")}
         <div class="pageno">— ${i} —</div>
       </div>`;
-    if (p.type === "toc") {
-      const byCat = {};
-      links.forEach((l, idx) => { (byCat[l.group] = byCat[l.group] || []).push({ l, page: Math.floor(idx / PER) + 2 }); });
-      return `<div class="page">
-        <div class="page-head"><span>Contents</span><b>目录</b></div>
-        ${Object.entries(byCat).map(([g, arr]) => `<div class="entry" data-jump="${arr[0].page}" data-group="${g}" style="cursor:pointer">
-            <span><h3>${emojiOf(g)} ${groupName(g)}<small>${arr.length} entries</small></h3>
-            <p>${arr.map(x => x.l.name).join(" · ")}</p></span>
-            <span class="visits">P.${arr[0].page}</span></div>`).join("")}
-        <div class="pageno">— ${i} —</div>
-      </div>`;
-    }
     if (p.type === "blank") return `<div class="page"></div>`;
     const totalV = Object.values(stats).reduce((s, x) => s + (x.c || 0), 0);
     const top = Object.entries(stats).sort((a, b) => b[1].c - a[1].c).slice(0, 3)
@@ -543,7 +530,7 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
     stats[a.dataset.url] = s;
     localStorage.setItem("nav.stats", JSON.stringify(stats));
   });
-  // 目录点击跳转（卷首目录 + 书末详细目录）
+  // 目录点击跳转（卷首目录）
   book.addEventListener("click", e => {
     const t = e.target.closest("[data-jump]");
     if (!t) return;
