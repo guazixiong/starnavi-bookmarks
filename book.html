@@ -283,7 +283,7 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
   const favicon = l => { if (l.icon) return l.icon;
     try { return `https://www.google.com/s2/favicons?domain=${new URL(l.url).hostname}&sz=128`; } catch { return ""; } };
 
-  const entryHTML = (l, i) => `<a class="entry" data-url="${l.url}" href="${l.url}" target="_blank" rel="noopener">
+  const entryHTML = (l, i) => `<a class="entry" data-url="${l.url}" data-group="${l.group}" href="${l.url}" target="_blank" rel="noopener">
       <span class="fav">${favicon(l) ? `<img src="${favicon(l)}" loading="lazy" onerror="this.outerHTML='${emojiOf(l.group)}'">` : emojiOf(l.group)}</span>
       <span><h3>${l.name}<small>${groupName(l.group)} · ${host(l.url)}</small></h3><p>${l.desc || "—"}</p></span>
       ${visits(l.url) ? `<span class="visits">已阅 ${visits(l.url)} 次</span>` : ""}
@@ -308,7 +308,7 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
         <div id="resLine">共收录 <b>${links.length}</b> 条</div>
         <div class="toc-lead">
           <div class="tl-head">Contents · 卷首目录</div>
-          ${Object.entries(firstOf).map(([g, x]) => `<div class="tl-row" data-jump="${x.page}">
+          ${Object.entries(firstOf).map(([g, x]) => `<div class="tl-row" data-jump="${x.page}" data-group="${g}">
               <span class="n">${emojiOf(g)} ${groupName(g)}</span><span class="d"></span>
               <span class="c">${x.n} 条</span><span class="p">P.${String(x.page).padStart(2, "0")}</span></div>`).join("")}
         </div>
@@ -325,7 +325,7 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
       links.forEach((l, idx) => { (byCat[l.group] = byCat[l.group] || []).push({ l, page: Math.floor(idx / PER) + 2 }); });
       return `<div class="page">
         <div class="page-head"><span>Contents</span><b>目录</b></div>
-        ${Object.entries(byCat).map(([g, arr]) => `<div class="entry" data-jump="${arr[0].page}" style="cursor:pointer">
+        ${Object.entries(byCat).map(([g, arr]) => `<div class="entry" data-jump="${arr[0].page}" data-group="${g}" style="cursor:pointer">
             <span><h3>${emojiOf(g)} ${groupName(g)}<small>${arr.length} entries</small></h3>
             <p>${arr.map(x => x.l.name).join(" · ")}</p></span>
             <span class="visits">P.${arr[0].page}</span></div>`).join("")}
@@ -440,9 +440,9 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
   const prev = () => flipTo(f - 1, 820);
   layout();
 
-  // ── 交互：点书页翻面（避开输入框/按钮/链接） ──
+  // ── 交互：点书页翻面（避开输入框/按钮/链接/目录跳转行） ──
   book.addEventListener("click", e => {
-    if (e.target.closest("input, button, a, .entry")) return;
+    if (e.target.closest("input, button, a, .entry, [data-jump]")) return;
     const face = e.target.closest(".face");
     if (!face) return;
     if (face.classList.contains("front")) next(); else prev();
@@ -463,7 +463,7 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
   book.addEventListener("pointerdown", e => {
     suppressClick = false;
     if (busy || e.button !== 0) return;
-    if (e.target.closest("input, button, a, .entry")) return;
+    if (e.target.closest("input, button, a, .entry, [data-jump]")) return;
     const face = e.target.closest(".face");
     if (!face) return;
     const dir = face.classList.contains("front") ? 1 : -1;
@@ -543,10 +543,25 @@ body{font-family:"Noto Sans SC",sans-serif;background:#05060a;color:var(--paper)
     stats[a.dataset.url] = s;
     localStorage.setItem("nav.stats", JSON.stringify(stats));
   });
-  // 目录页点击跳转
+  // 目录点击跳转（卷首目录 + 书末详细目录）
   book.addEventListener("click", e => {
     const t = e.target.closest("[data-jump]");
-    if (t) flipTo(Math.ceil(+t.dataset.jump / 2), 300);
+    if (!t) return;
+    const page = Math.max(2, Math.min(pages.length - 1, Math.round(+t.dataset.jump) || 2));
+    const target = Math.ceil(page / 2);
+    const steps = Math.abs(target - f);
+    flipTo(target, 300);
+    // 落点高亮：即使目标页就在当前跨页（不翻页），也要给出反馈
+    setTimeout(() => {
+      const face = book.querySelector(`.sheet[data-k="${Math.floor(page / 2)}"] > .face.${page % 2 ? "back" : "front"}`);
+      if (!face) return;
+      const g = t.dataset.group;
+      const hits = [...face.querySelectorAll(".entry")].filter(el => !g || el.dataset.group === g);
+      (hits.length ? hits : [...face.querySelectorAll(".entry")]).forEach(el => {
+        el.classList.add("spot");
+        setTimeout(() => el.classList.remove("spot"), 2400);
+      });
+    }, steps * 300 + 560);
   });
 
   // ── 自适应缩放 ──
